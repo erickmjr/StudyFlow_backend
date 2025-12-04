@@ -1,13 +1,20 @@
-import { PrismaClient } from '@prisma/client/extension';
+import { PrismaClient } from "../generated/prisma/client";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { Router } from 'express';
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { authMiddleware } from './auth-middleware';
-import { describe } from 'node:test';
 export const router = Router();
 
-const prisma = new PrismaClient();
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+});
+
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter });
 
 router.post('/register', async (req: Request, res: Response) => {
     const { email, password, name } = req.body;
@@ -52,7 +59,7 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 router.post('/login', async (req: Request, res: Response) => {
-    const { email, hashedPassword } = req.body;
+    const { email, password } = req.body;
 
     try {
         const user = await prisma.user.findUnique({
@@ -63,7 +70,7 @@ router.post('/login', async (req: Request, res: Response) => {
             return res.status(401).json({ error: 'Invalid credentials.' });
         }
 
-        const isMatch = await bcrypt.compare(user.password, hashedPassword);
+        const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid credentials.' });
@@ -81,8 +88,12 @@ router.post('/login', async (req: Request, res: Response) => {
         );
 
         return res.status(200).json({
-            message: 'Login successful',
-            token
+            token,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name
+            }
         })
 
     } catch (error) {
@@ -102,8 +113,6 @@ router.get('/tasks', authMiddleware, async (req: Request, res: Response) => {
             where: { userId }
         });
 
-        if (tasks.length === 0) return res.status(204);
-
         return res.status(200).json(
             {
                 tasks,
@@ -119,11 +128,12 @@ router.get('/tasks', authMiddleware, async (req: Request, res: Response) => {
 router.post('/tasks', authMiddleware, async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
-        const dataToCreate = req.body;
 
-        const allowedFields = ['title', 'description', 'dueDate'];
+        if (!userId) return res.status(400).json({ error: 'User id not specified.' });
 
-        const { title, description, dueDate } = req.body;
+        const { title, description, rawDueDate } = req.body;
+
+        const dueDate = new Date(rawDueDate);
 
         if (!title || !description || !dueDate) {
             return res.status(400).json({ error: 'POST requires: title, description and DueDate' });
@@ -139,7 +149,7 @@ router.post('/tasks', authMiddleware, async (req: Request, res: Response) => {
                 createdAt: now,
                 updatedAt: now,
                 userId,
-                done: false
+                done: false,
             }
         });
 
@@ -217,7 +227,7 @@ router.patch('/tasks/:id', authMiddleware, async (req: Request, res: Response) =
         const updatedTask = await prisma.task.update({
             where: { id: taskId },
             data: {
-                dataToUpdate,
+                ...dataToUpdate,
                 updatedAt: new Date()
             }
         });
