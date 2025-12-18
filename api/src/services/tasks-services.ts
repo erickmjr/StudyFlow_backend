@@ -41,21 +41,36 @@ export const createTask = async (userId: number, title: string, description: str
     };
 };
 
+export const deleteTask = async (taskId: number, userId: number) => {
+    if (isNaN(taskId)) return { status: 400, body: { error: 'Invalid task id.' } };
+
+    try {
+        const deletedTask = TasksRepository.deleteTaskById(taskId, userId);
+
+        if (!deletedTask) return  { status: 404, body: { error: 'Task not found.' } };
+
+        return { status: 200, body: { deleteTask } };
+
+    } catch (error) {
+        return { status: 500, body: { error: 'Server error.' } };
+    }
+}
+
 export const updateFullTask = async (taskId: number, userId: number, title: string, description: string, dueDate: Date, done: boolean) => {
 
-    if (isNaN(taskId)) return { status: 200, body: { error: 'Invalid task id.' } };
+    if (isNaN(taskId)) return { status: 400, body: { error: 'Invalid task id.' } };
 
     if (!title || !description || dueDate === undefined || done === undefined) {
-        return { status: 400, body: { error: 'PUT requires a full task payload.' } }
+        return { status: 400, body: { error: 'PUT requires a full task payload.' } };
     };
 
     try {
 
-        const existingTask = await TasksRepository.verifyTaskExists(taskId, userId);
+        const existingTask = await TasksRepository.getTaskById(taskId, userId);
 
         if (!existingTask) return { status: 404, body: { error: 'Task not found.' } };
 
-        const taskUpdated = await TasksRepository.updateTask(taskId, {title, description, done, dueDate});
+        const taskUpdated = await TasksRepository.updateTask(taskId, userId, {title, description, done, dueDate});
 
         return { status: 200, body: { taskUpdated } };
 
@@ -71,15 +86,30 @@ export const updateTaskPiece = async (taskId: number, userId: number, dataToUpda
         
         if (Object.keys(dataToUpdate).length === 0) return { status: 400, body: { error: 'No valid fields to update.' }} ;
 
-        const existingTask = await TasksRepository.verifyTaskExists(taskId, userId);
+        const existingTask = await TasksRepository.getTaskById(taskId, userId);
 
-        if (!existingTask) return { status: 404, body: { error: 'Task not found.' } } ;
+        if (!existingTask) return { status: 204, body: { error: 'Task not found.' } } ;
 
-        const updatedTask = await TasksRepository.updateTask(taskId, {...dataToUpdate});
+        const updatedTask = await TasksRepository.updateTask(taskId, userId, {...dataToUpdate});
 
         return { status: 200, body: { updatedTask } };
 
     } catch (error) {
         return { status: 500, body: { error: 'Server error.' } };
     };
-}
+};
+
+export const getTaskById = async (taskId: number, userId: number) => {
+    
+    try {
+        const task = await TasksRepository.getTaskById(taskId, userId);
+
+        if (!task) return { status: 204, body: { error: 'Task not found.' } };
+
+        return { status: 200, body:  { task }  };
+
+    } catch (error) {
+        return  { status: 500, body: { error: 'Server error.' } };
+    }
+};
+

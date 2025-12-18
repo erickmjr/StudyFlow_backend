@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from "../../generated/prisma/client";
-import { Pool } from "pg";
+import { Pool } from "../../node_modules/@types/pg";
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as TasksServices from '../services/tasks-services'
 
@@ -62,27 +62,19 @@ export const patchTask = async (req: Request, res: Response) => {
 }
 
 export const deleteTask = async (req: Request, res: Response) => {
-    try {
+    const taskId = Number(req.params.id);
+    const userId = Number(req.user?.id);
 
-        const taskId = Number(req.params.id);
-        const userId = Number(req.user?.id);
+    const existingTask = TasksServices.getTaskById(taskId, userId);
 
-        const existingTask = await prisma.task.findFirst({
-            where: { id: taskId }
-        });
+    if (!existingTask) return res.status(404).json({ error: 'Task not found.' });
 
-        if (!existingTask) return res.status(404).json({ error: 'Task not found.' });
+    const deletedTask = await prisma.task.delete({
+        where: {
+            id: taskId,
+            userId
+        }
+    });
 
-
-        const deletedTask = await prisma.task.delete({
-            where: {
-                id: taskId,
-                userId
-            }
-        });
-
-        return res.status(200).json(deletedTask);
-
-    } catch (error) {
-    }
+    return res.status(200).json(deletedTask);
 }

@@ -1,5 +1,5 @@
-import { PrismaClient, Task } from "../../generated/prisma/client";
-import { Pool } from "pg";
+import { PrismaClient } from "../../generated/prisma/client";
+import { Pool } from "../../node_modules/@types/pg";
 import { PrismaPg } from '@prisma/adapter-pg';
 import { TaskModel } from "../models/Task";
 
@@ -36,9 +36,9 @@ export const createTask = async (title: string, description: string, dueDate: Da
     return createdTask;
 };
 
-export const updateTask = async (taskId: number, data: Partial<TaskModel>) => {
+export const updateTask = async (taskId: number, userId: number, data: Partial<TaskModel>) => {
     const updatedTask = prisma.task.update({
-        where: { id: taskId },
+        where: { id: taskId, userId: userId },
         data: {
             title: data.title,
             description: data.description,
@@ -49,9 +49,18 @@ export const updateTask = async (taskId: number, data: Partial<TaskModel>) => {
     });
 
     return updatedTask;
+};
+
+
+export const deleteTaskById = async (taskId: number, userId: number) => {
+    const deletedTask = prisma.task.delete({
+        where: { id: taskId, userId: userId }
+    });
+
+    return deletedTask;
 }
 
-export const verifyTaskExists = async (taskId: number, userId: number) => {
+export const getTaskById = async (taskId: number, userId: number) => {
     const existingTask = await prisma.task.findFirst({
         where: {
             id: taskId,
@@ -60,4 +69,4 @@ export const verifyTaskExists = async (taskId: number, userId: number) => {
     });
 
     return existingTask;
-}
+};
