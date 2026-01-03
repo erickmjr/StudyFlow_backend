@@ -1,6 +1,21 @@
 import { Request, Response } from 'express';
 import * as UsersServices from '../services/users-services';
 
+export const getAllUsers = async (req: Request, res: Response) => {
+    try {
+        const { userType } = req.body;
+
+        if (userType !== 'admin') return res.status(403).json({ message: 'Insufficient permission.' });
+
+        const response = await UsersServices.getAllUsers();
+
+        res.status(response.status).json(response.body);
+
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal server error.' });
+    }
+}
+
 export const registerUser = async (req: Request, res: Response) => {
     try {
         const { email, password, name } = req.body;
@@ -28,9 +43,12 @@ export const loginUser = async (req: Request, res: Response) => {
 
 export const deleteUserById = async (req: Request, res: Response) => {
     try {
-        const { userId } = req.body;
+        const { userId, userType } = req.body;
+
+        if (userType !== 'admin') return res.status(403).json({ message: 'Insufficient permission' })
 
         const response = await UsersServices.deleteUserById(userId);
+
 
         res.status(response.status).json(response.body);
     } catch (error) {
@@ -60,7 +78,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     try {
         const { token, newPassword } = req.body;
 
-        if (!token || !newPassword) return res.status(400).json({ error: 'Token and new password are required.'});
+        if (!token || !newPassword) return res.status(400).json({ error: 'Token and new password are required.' });
 
         const response = await UsersServices.resetPassword(token, newPassword);
 

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import * as TasksServices from '../services/tasks-services'
 
-export const getTasks = async (req: Request, res: Response) => {
+export const getUserTasks = async (req: Request, res: Response) => {
     try {
         const userId = Number(req.user?.id);
 

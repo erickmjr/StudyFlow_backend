@@ -2,6 +2,20 @@ import * as UsersRepository from '../repository/users-repository';
 import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
 import { sendResetPasswordMail } from '../utils/sendResetPasswordMail';
+import { json } from 'express';
+
+export const getAllUsers = async () => {
+    try {
+        const users = UsersRepository.getAllUsers();
+
+        if (!users) return { status: 204, body: { message: 'No users.' } };
+
+        return { status: 200, body: users };
+
+    } catch (error) {
+        return { status: 500, body: { message: 'Internal server error.' } }
+    }
+}
 
 export const registerUser = async (email: string, password: string, name: string) => {
 
@@ -36,7 +50,7 @@ export const registerUser = async (email: string, password: string, name: string
 
     } catch (error) {
         console.error(error)
-        return { status: 500, body: { error: 'Server error' } };
+        return { status: 500, body: { error: 'Internal server error' } };
     };
 };
 
@@ -104,7 +118,7 @@ export const forgotPassword = async (email: string) => {
 
         const tokenPassword = jwt.sign(
             {
-                email: user.email,
+                email: email,
                 purpose: 'password-reset'
             },
             process.env.JWT_SECRET!,

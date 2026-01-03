@@ -10,11 +10,18 @@ const adapter = new PrismaPg(pool);
 
 const prisma = new PrismaClient({ adapter });
 
+export const getAllUsers = async () => {
+    const users = await prisma.user.findMany();
+
+    return users;
+}
+
 export const createUser = async (name: string, email: string, hashedPassword: string) => {
     const created = await prisma.user.create({
         data: {
             name: name,
             email: email,
+            type: 'common',
             password: hashedPassword,
             createdAt: new Date()
         }

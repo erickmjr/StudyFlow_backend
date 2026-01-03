@@ -9,8 +9,9 @@ router.post('/user/register', UserController.registerUser);
 router.post('/user/login', UserController.loginUser);
 router.post('/user/forgot-password', UserController.forgotPassword);
 router.post('user/reset-password', resetPasswordMiddleware, UserController.resetPassword);
+router.get('/users', UserController.getAllUsers);
 
-router.get('/tasks', authMiddleware, TasksController.getTasks);
+router.get('/tasks', authMiddleware, TasksController.getUserTasks);
 router.get('/tasks/:id', authMiddleware, TasksController.getTaskById);
 router.post('/tasks', authMiddleware, TasksController.postTask);
 router.put('/tasks/:id', authMiddleware, TasksController.putTask);
