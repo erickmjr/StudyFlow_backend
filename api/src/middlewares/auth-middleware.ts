@@ -6,7 +6,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 
     if (!token) return res.status(401).json({ error: 'Missing token.' });
 
-    
     try {
         const secret: Secret | undefined = process.env.JWT_SECRET;
 

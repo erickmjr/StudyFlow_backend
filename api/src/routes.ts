@@ -8,6 +8,7 @@ router.post('/user/register', UserController.registerUser);
 router.post('/user/login', UserController.loginUser);
 router.post('/user/forgot-password', UserController.forgotPassword);
 router.post('/user/reset-password', UserController.resetPassword);
+
 router.get('/users', UserController.getAllUsers);
 
 router.get('/tasks', authMiddleware, TasksController.getUserTasks);

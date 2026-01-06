@@ -5,9 +5,9 @@ import { sendResetPasswordMail } from '../utils/sendResetPasswordMail';
 
 export const getAllUsers = async () => {
     try {
-        const users = UsersRepository.getAllUsers();
+        const users = await UsersRepository.getAllUsers();
 
-        if (!users) return { status: 204, body: { message: 'No users.' } };
+        if (!users) return { status: 204 };
 
         return { status: 200, body: users };
 
@@ -38,7 +38,7 @@ export const registerUser = async (email: string, password: string, name: string
 
         const token = jwt.sign(
             {
-                sub: String(created.id),
+                sub: Number(created.id),
                 email: created.email
             },
             process.env.JWT_SECRET!,
@@ -60,7 +60,7 @@ export const loginUser = async (email: string, password: string) => {
         const user = await UsersRepository.getUserByEmail(email);
 
         if (!user) {
-            return { status: 4011, body: { error: 'Invalid credentials.' } };
+            return { status: 401, body: { error: 'Invalid credentials.' } };
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -71,7 +71,7 @@ export const loginUser = async (email: string, password: string) => {
 
         const token = jwt.sign(
             {
-                id: Number(user.id),
+                sub: Number(user.id),
                 email: user.email
             },
             process.env.JWT_SECRET!,
@@ -84,7 +84,7 @@ export const loginUser = async (email: string, password: string) => {
             status: 200, body: {
                 token,
                 user: {
-                    id: Number(user.id),
+                    sub: Number(user.id),
                     email: user.email,
                     name: user.name
                 }

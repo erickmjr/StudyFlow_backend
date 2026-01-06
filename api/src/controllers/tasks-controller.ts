@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as TasksServices from '../services/tasks-services'
+import { error } from 'console';
 
 export const getUserTasks = async (req: Request, res: Response) => {
     try {
@@ -46,7 +47,6 @@ export const postTask = async (req: Request, res: Response) => {
 
 export const putTask = async (req: Request, res: Response) => {
     try {
-
         
         const taskId = Number(req.params.id);
         const userId = Number(req.user?.id);
@@ -57,7 +57,15 @@ export const putTask = async (req: Request, res: Response) => {
 
         const { title, description, dueDate, done } = req.body;
 
-        const response = await TasksServices.updateFullTask(taskId, userId, title, description, done, dueDate);
+        const parsedDueDate = dueDate ? new Date(dueDate) : undefined;
+
+        if (parsedDueDate && isNaN(parsedDueDate.getTime())) {
+            return res.status(400).json({ error: 'Invalid dueDate.' });
+        }
+
+        if (typeof done !== 'boolean') return res.status(400).json({ error: 'Invalid done value.' });
+
+        const response = await TasksServices.updateFullTask(taskId, userId, title, description, parsedDueDate, done);
 
         return res.status(response.status).json(response.body);
     } catch (error) {

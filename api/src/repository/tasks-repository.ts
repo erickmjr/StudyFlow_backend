@@ -12,7 +12,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 export const getAllUserTasks = async (userId: number): Promise<TaskModel[]> => {
-    const tasks = prisma.task.findMany({
+    const tasks = await prisma.task.findMany({
         where: { userId }
     });
 
@@ -37,7 +37,7 @@ export const createTask = async (title: string, description: string, dueDate: Da
 };
 
 export const updateTask = async (taskId: number, userId: number, data: Partial<TaskModel>) => {
-    const updatedTask = prisma.task.update({
+    const updatedTask = await prisma.task.update({
         where: { id: taskId, userId: userId },
         data: {
             title: data.title,
@@ -53,7 +53,7 @@ export const updateTask = async (taskId: number, userId: number, data: Partial<T
 
 
 export const deleteTaskById = async (taskId: number, userId: number) => {
-    const deletedTask = prisma.task.delete({
+    const deletedTask = await prisma.task.delete({
         where: { id: taskId, userId: userId }
     });
 
