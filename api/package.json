@@ -2,11 +2,11 @@
   "name": "taskflow",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
     "start:dev": "tsx watch --env-file=.env src/server.ts",
-    "dist": "tsup src",
-    "start:dist": "npm run dist && node dist/src/index.js"
+    "build": "tsup src/**/*.ts && node scripts/copy-templates.js",
+    "start": "npm run build && node dist/server.js"
   },
   "keywords": [],
   "author": "",
