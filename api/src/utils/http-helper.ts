@@ -1,4 +1,4 @@
-import { HttpResponse } from "../models/http-response-model";
+import type HttpResponse from "../models/http-response-model";
 
 export const ok = async(data: any): Promise<HttpResponse> => {
     return {
