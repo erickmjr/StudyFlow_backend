@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
-import * as TasksServices from '../services/tasks-services'
-import { error } from 'console';
+import * as TopicsServices from '../services/topics-services'
 
-export const getUserTasks = async (req: Request, res: Response) => {
+export const getUserTopics = async (req: Request, res: Response) => {
     try {
         const userId = Number(req.user?.id);
 
-        const response = await TasksServices.getAllTasks(userId);
+        const response = await TopicsServices.getAllTopics(userId);
 
         res.status(response.status).json(response.body);
     } catch (error) {
@@ -14,14 +13,14 @@ export const getUserTasks = async (req: Request, res: Response) => {
     }
 };
 
-export const getTaskById = async (req: Request, res: Response) => {
+export const getTopicById = async (req: Request, res: Response) => {
     try {
         const userId = Number(req.user?.id);
-        const taskId = Number(req.params.id);
+        const topicId = Number(req.params.id);
 
-        if (isNaN(taskId)) return res.status(400).json({ error: 'Invalid task ID.' });
+        if (isNaN(topicId)) return res.status(400).json({ error: 'Invalid Topic ID.' });
 
-        const response = await TasksServices.getTaskById(taskId, userId);
+        const response = await TopicsServices.getTopicById(topicId, userId);
 
         return res.status(response.status).json(response.body);
     } catch (error) {
@@ -29,7 +28,7 @@ export const getTaskById = async (req: Request, res: Response) => {
     }
 }
 
-export const postTask = async (req: Request, res: Response) => {
+export const postTopic = async (req: Request, res: Response) => {
     try {
         const userId = Number(req.user?.id);
 
@@ -37,7 +36,7 @@ export const postTask = async (req: Request, res: Response) => {
 
         const { title, description, rawDueDate } = req.body;
 
-        const response = await TasksServices.createTask(userId, title, description, rawDueDate);
+        const response = await TopicsServices.createTopic(userId, title, description, rawDueDate);
 
         res.status(response.status).json(response.body);
     } catch (error) {
@@ -45,13 +44,13 @@ export const postTask = async (req: Request, res: Response) => {
     }
 };
 
-export const putTask = async (req: Request, res: Response) => {
+export const putTopic = async (req: Request, res: Response) => {
     try {
         
-        const taskId = Number(req.params.id);
+        const topicId = Number(req.params.id);
         const userId = Number(req.user?.id);
 
-        if (isNaN(taskId)) return res.status(400).json({ error: 'Invalid task ID.' });
+        if (isNaN(topicId)) return res.status(400).json({ error: 'Invalid topic ID.' });
 
         if (!req.body) return res.status(400).json({ error: 'Request body is missing.' });
 
@@ -65,7 +64,7 @@ export const putTask = async (req: Request, res: Response) => {
 
         if (typeof done !== 'boolean') return res.status(400).json({ error: 'Invalid done value.' });
 
-        const response = await TasksServices.updateFullTask(taskId, userId, title, description, parsedDueDate, done);
+        const response = await TopicsServices.updateFullTopic(topicId, userId, title, description, parsedDueDate, done);
 
         return res.status(response.status).json(response.body);
     } catch (error) {
@@ -73,9 +72,9 @@ export const putTask = async (req: Request, res: Response) => {
     }
 };
 
-export const patchTask = async (req: Request, res: Response) => {
+export const patchTopic = async (req: Request, res: Response) => {
     try {
-        const taskId = Number(req.params.id);
+        const topicId = Number(req.params.id);
         const userId = Number(req.user?.id);
 
         if (!req.body) return res.status(400).json({ error: 'Request body is missing.' });
@@ -90,7 +89,7 @@ export const patchTask = async (req: Request, res: Response) => {
             };
         };
 
-        const response = await TasksServices.updateTaskPiece(taskId, userId, dataToUpdate);
+        const response = await TopicsServices.updateTopicPiece(topicId, userId, dataToUpdate);
 
         return res.status(response.status).json(response.body);
     } catch (error) {
@@ -98,18 +97,18 @@ export const patchTask = async (req: Request, res: Response) => {
     }
 };
 
-export const deleteTask = async (req: Request, res: Response) => {
+export const deleteTopic = async (req: Request, res: Response) => {
     try {
-        const taskId = Number(req.params.id);
+        const topicId = Number(req.params.id);
         const userId = Number(req.user?.id);
 
-        const existingTask = await TasksServices.getTaskById(taskId, userId);
+        const existingTopic = await TopicsServices.getTopicById(topicId, userId);
 
-        if (!existingTask) return res.status(404).json({ error: 'Task not found.' });
+        if (!existingTopic) return res.status(404).json({ error: 'Topic not found.' });
 
-        const deletedTask = await TasksServices.deleteTask(taskId, userId);
+        const deletedTopic = await TopicsServices.deleteTopic(topicId, userId);
 
-        return res.status(200).json(deletedTask);
+        return res.status(200).json(deletedTopic);
     } catch (error) {
         return res.status(500).json({ error: 'Internal Server Error.' });
     }

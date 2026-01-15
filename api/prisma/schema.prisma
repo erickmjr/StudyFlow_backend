@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
-model Task {
+model Topic {
   id          Int       @id @default(autoincrement())
   title       String
   description String?
@@ -26,5 +26,5 @@ model User {
   password  String
   createdAt DateTime @default(now())
   type      String   @default("common")
-  tasks     Task[]
+  topics     Topic[]
 }

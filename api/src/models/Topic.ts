@@ -1,4 +1,4 @@
-export interface TaskModel {
+export interface TopicModel {
     id: number;
     createdAt: Date;
     title: string;

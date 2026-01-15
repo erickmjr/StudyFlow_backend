@@ -23,9 +23,9 @@ export const sendResetPasswordMail = async (email: string, token: string) => {
     html = html.replace('{{resetLink}}', resetLink);
 
     await transporter.sendMail({
-        from: `"TaskFlow" <no-reply@taskflow.com>`,
+        from: `"studyFlow" <no-reply@studyflow.com>`,
         to: email,
-        subject: 'Recuperação de senha - TaskFlow',
+        subject: 'Recuperação de senha - StudyFlow',
         html
     });
 };
