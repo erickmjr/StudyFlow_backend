@@ -6,7 +6,7 @@
   "scripts": {
     "start:dev": "tsx watch --env-file=.env src/server.ts",
     "build": "tsup src/**/*.ts && node scripts/copy-templates.js",
-    "start": "npm run build && node dist/server.js"
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -34,5 +34,8 @@
     "tsup": "^8.5.1",
     "tsx": "^2.1.0",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }
