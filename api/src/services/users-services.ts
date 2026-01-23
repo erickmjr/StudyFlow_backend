@@ -190,3 +190,17 @@ export const resetPassword = async (token: string, password: string) => {
         return { status: 500, body: { error: 'Internal server error.' } };
     }
 }
+
+export const getMe = async (userId: number) => {
+    try {
+        const user = await UsersRepository.getUserById(userId);
+        
+        if (!user) return { status: 404, body: { error: 'User not found.' } };
+
+        return { status: 200, body: { user } };
+
+    } catch(error) {
+        return { status: 500, body: { error: 'Internal server error.' } };
+    }
+
+}

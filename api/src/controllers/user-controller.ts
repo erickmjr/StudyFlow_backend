@@ -90,3 +90,18 @@ export const resetPassword = async (req: Request, res: Response) => {
         return res.status(500).json({ message: 'Internal server error.' });
     }
 }
+
+export const getMe = async (req: Request, res: Response) => {
+    try {
+        const userId = Number(req.user?.sub);
+
+        if (!userId) return res.status(400).json({ error: 'Invalid user ID.' });  
+
+        const response = await UsersServices.getMe(userId);
+
+        res.status(response.status).json(response.body);
+
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal server error.' }); 
+    }
+}

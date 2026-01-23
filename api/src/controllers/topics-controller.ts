@@ -3,7 +3,7 @@ import * as TopicsServices from '../services/topics-services'
 
 export const getUserTopics = async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.user?.id);
+        const userId = Number(req.user?.sub);
 
         const response = await TopicsServices.getAllTopics(userId);
 
@@ -15,7 +15,7 @@ export const getUserTopics = async (req: Request, res: Response) => {
 
 export const getTopicById = async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.user?.id);
+        const userId = Number(req.user?.sub);
         const topicId = Number(req.params.id);
 
         if (isNaN(topicId)) return res.status(400).json({ error: 'Invalid Topic ID.' });
@@ -30,7 +30,7 @@ export const getTopicById = async (req: Request, res: Response) => {
 
 export const postTopic = async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.user?.id);
+        const userId = Number(req.user?.sub);
 
         if (!req.body) return res.status(400).json({ error: 'Request body is missing.' });
 
@@ -48,7 +48,7 @@ export const putTopic = async (req: Request, res: Response) => {
     try {
         
         const topicId = Number(req.params.id);
-        const userId = Number(req.user?.id);
+        const userId = Number(req.user?.sub);
 
         if (isNaN(topicId)) return res.status(400).json({ error: 'Invalid topic ID.' });
 
@@ -75,7 +75,7 @@ export const putTopic = async (req: Request, res: Response) => {
 export const patchTopic = async (req: Request, res: Response) => {
     try {
         const topicId = Number(req.params.id);
-        const userId = Number(req.user?.id);
+        const userId = Number(req.user?.sub);
 
         if (!req.body) return res.status(400).json({ error: 'Request body is missing.' });
 
@@ -100,7 +100,7 @@ export const patchTopic = async (req: Request, res: Response) => {
 export const deleteTopic = async (req: Request, res: Response) => {
     try {
         const topicId = Number(req.params.id);
-        const userId = Number(req.user?.id);
+        const userId = Number(req.user?.sub);
 
         const existingTopic = await TopicsServices.getTopicById(topicId, userId);
 

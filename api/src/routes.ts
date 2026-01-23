@@ -4,8 +4,8 @@ export const router = Router();
 import * as TopicsController from './controllers/topics-controller';
 import * as UserController from './controllers/user-controller';
 
-router.post('/user/register', UserController.registerUser);
-router.post('/user/login', UserController.loginUser);
+router.post('/user/auth/register', UserController.registerUser);
+router.post('/user/auth/login', UserController.loginUser);
 router.post('/user/forgot-password', UserController.forgotPassword);
 router.post('/user/reset-password', UserController.resetPassword);
 

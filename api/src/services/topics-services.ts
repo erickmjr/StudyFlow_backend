@@ -111,4 +111,3 @@ export const getTopicById = async (topicId: number, userId: number) => {
         return  { status: 500, body: { error: 'Internal server error.' } };
     }
 };
-
