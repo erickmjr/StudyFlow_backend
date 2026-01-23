@@ -1,3 +1,4 @@
+import { TopicModel } from '../models/Topic';
 import * as topicsRepository from '../repository/topics-repository';
 
 export const getAllTopics = async (userId: number) => {
@@ -15,6 +16,7 @@ export const getAllTopics = async (userId: number) => {
 };
 
 export const createTopic = async (userId: number, title: string, description: string, rawDueDate: string) => {
+    
     if (!userId) return { status: 400, body: { error: 'User id not specified.' } };
 
     if (!title || !description || !rawDueDate) {
@@ -47,7 +49,7 @@ export const deleteTopic = async (topicId: number, userId: number) => {
     try {
         const deletedTopic = await topicsRepository.deleteTopicById(topicId, userId);
 
-        if (!deletedTopic) return  { status: 404, body: { error: 'Topic not found.' } };
+        if (!deletedTopic) return { status: 404, body: { error: 'Topic not found.' } };
 
         return { status: 200, body: { deleteTopic } };
 
@@ -80,16 +82,16 @@ export const updateFullTopic = async (topicId: number, userId: number, title: st
 };
 
 export const updateTopicPiece = async (topicId: number, userId: number, dataToUpdate: Record<string, any>) => {
-    
+
     try {
-        
-        if (Object.keys(dataToUpdate).length === 0) return { status: 400, body: { error: 'No valid fields to update.' }} ;
+
+        if (Object.keys(dataToUpdate).length === 0) return { status: 400, body: { error: 'No valid fields to update.' } };
 
         const existingTopic = await topicsRepository.getTopicById(topicId, userId);
 
-        if (!existingTopic) return { status: 204, body: { error: 'Topic not found.' } } ;
+        if (!existingTopic) return { status: 204, body: { error: 'Topic not found.' } };
 
-        const updatedTopic = await topicsRepository.updateTopic(topicId, userId, {...dataToUpdate});
+        const updatedTopic = await topicsRepository.updateTopic(topicId, userId, { ...dataToUpdate });
 
         return { status: 200, body: { updatedTopic } };
 
@@ -98,16 +100,33 @@ export const updateTopicPiece = async (topicId: number, userId: number, dataToUp
     };
 };
 
+export const patchTopic = async (topicId: number, userId: number, dataToUpdate: Partial<TopicModel>) => {
+    try {
+        if (Object.keys(dataToUpdate).length === 0) return { status: 400, body: { error: 'No valid fields to update.' } };
+
+        const existingTopic = await topicsRepository.getTopicById(topicId, userId);
+
+        if (!existingTopic) return { status: 204, body: { error: 'Topic not found.' } };
+
+        const updatedTopic = await topicsRepository.updateTopic(topicId, userId, { ...dataToUpdate });
+
+        return { status: 200, body: { updatedTopic } };
+
+    } catch (error) {
+        return { status: 500, body: { error: 'Internal server error.' } };
+    }
+}
+
 export const getTopicById = async (topicId: number, userId: number) => {
-    
+
     try {
         const topic = await topicsRepository.getTopicById(topicId, userId);
 
         if (!topic) return { status: 204, body: { error: 'Topic not found.' } };
 
-        return { status: 200, body:  { topic }  };
+        return { status: 200, body: { topic } };
 
     } catch (error) {
-        return  { status: 500, body: { error: 'Internal server error.' } };
+        return { status: 500, body: { error: 'Internal server error.' } };
     }
 };

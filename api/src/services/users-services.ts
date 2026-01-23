@@ -37,17 +37,18 @@ export const registerUser = async (email: string, password: string, name: string
         const created = await UsersRepository.createUser(name, email, hashedPassword);
 
         const token = jwt.sign(
-            {
-                sub: Number(created.id),
-                email: created.email
-            },
+            {},
             process.env.JWT_SECRET!,
             {
+                subject: created.id.toString(),
                 expiresIn: '2h'
             }
         );
 
-        return { status: 201, body: { token, created } };
+        return { status: 201, body: { token, user: {
+            id: created.id,
+            name: created.name
+        } } };
 
     } catch (error) {
         console.error(error)
@@ -71,11 +72,11 @@ export const loginUser = async (email: string, password: string) => {
 
         const token = jwt.sign(
             {
-                sub: Number(user.id),
-                email: user.email
+
             },
             process.env.JWT_SECRET!,
             {
+                subject: user.id.toString(),
                 expiresIn: '2h'
             }
         );
@@ -125,7 +126,7 @@ export const forgotPassword = async (email: string) => {
                     expiresIn: '15m'
                 }
             )
-    
+
             await sendResetPasswordMail(email, tokenPassword);
         }
 
@@ -141,7 +142,7 @@ export const resetPassword = async (token: string, password: string) => {
     let decoded: ResetPasswordTokenPayload;
 
     try {
-        
+
         if (!token) return { status: 400, body: { message: 'Missing token.' } };
 
         const secret: Secret | undefined = process.env.JWT_SECRET;
@@ -180,7 +181,7 @@ export const resetPassword = async (token: string, password: string) => {
     } catch (error) {
 
         if (error instanceof jwt.TokenExpiredError) {
-            return { status: 401, body: { message:  'Token expired' } };
+            return { status: 401, body: { message: 'Token expired' } };
         }
 
         if (error instanceof jwt.JsonWebTokenError) {
@@ -194,12 +195,12 @@ export const resetPassword = async (token: string, password: string) => {
 export const getMe = async (userId: number) => {
     try {
         const user = await UsersRepository.getUserById(userId);
-        
+
         if (!user) return { status: 404, body: { error: 'User not found.' } };
 
         return { status: 200, body: { user } };
 
-    } catch(error) {
+    } catch (error) {
         return { status: 500, body: { error: 'Internal server error.' } };
     }
 

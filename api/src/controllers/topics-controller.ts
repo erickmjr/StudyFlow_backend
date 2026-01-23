@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import * as TopicsServices from '../services/topics-services'
+import { TopicModel } from '../models/Topic';
 
 export const getUserTopics = async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.user?.sub);
+        const userId = Number(req.user?.id);
 
         const response = await TopicsServices.getAllTopics(userId);
 
@@ -15,7 +16,7 @@ export const getUserTopics = async (req: Request, res: Response) => {
 
 export const getTopicById = async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.user?.sub);
+        const userId = Number(req.user?.id);
         const topicId = Number(req.params.id);
 
         if (isNaN(topicId)) return res.status(400).json({ error: 'Invalid Topic ID.' });
@@ -30,7 +31,7 @@ export const getTopicById = async (req: Request, res: Response) => {
 
 export const postTopic = async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.user?.sub);
+        const userId = Number(req.user?.id);
 
         if (!req.body) return res.status(400).json({ error: 'Request body is missing.' });
 
@@ -48,7 +49,7 @@ export const putTopic = async (req: Request, res: Response) => {
     try {
         
         const topicId = Number(req.params.id);
-        const userId = Number(req.user?.sub);
+        const userId = Number(req.user?.id);
 
         if (isNaN(topicId)) return res.status(400).json({ error: 'Invalid topic ID.' });
 
@@ -75,21 +76,21 @@ export const putTopic = async (req: Request, res: Response) => {
 export const patchTopic = async (req: Request, res: Response) => {
     try {
         const topicId = Number(req.params.id);
-        const userId = Number(req.user?.sub);
+        const userId = Number(req.user?.id);
 
         if (!req.body) return res.status(400).json({ error: 'Request body is missing.' });
 
-        const allowedFields = ['title', 'description', 'dueDate', 'done'];
+        const allowedFields: (keyof TopicModel)[] = ['title', 'description', 'dueDate', 'done'];
 
-        const dataToUpdate: Record<string, any> = {};
+        const dataToUpdate: Partial<TopicModel> = {};
 
-        for (const field of allowedFields) {
+        for (let field of allowedFields) {
             if (req.body[field] !== undefined) {
                 dataToUpdate[field] = req.body[field];
-            };
-        };
+            }
+        }
 
-        const response = await TopicsServices.updateTopicPiece(topicId, userId, dataToUpdate);
+        const response = await TopicsServices.patchTopic(topicId, userId, dataToUpdate);
 
         return res.status(response.status).json(response.body);
     } catch (error) {
@@ -100,7 +101,7 @@ export const patchTopic = async (req: Request, res: Response) => {
 export const deleteTopic = async (req: Request, res: Response) => {
     try {
         const topicId = Number(req.params.id);
-        const userId = Number(req.user?.sub);
+        const userId = Number(req.user?.id);
 
         const existingTopic = await TopicsServices.getTopicById(topicId, userId);
 

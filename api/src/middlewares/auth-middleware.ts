@@ -12,7 +12,11 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         if (!secret) throw new Error("JWT_SECRET is not defined");
 
         const decoded = jwt.verify(token, secret) as JwtPayload;
-        req.user = decoded;
+
+        req.user = { 
+            id: Number(decoded.sub)
+        };
+        
         next();
     } catch {
         return res.status(401).json({ error: 'Invalid token.' })

@@ -93,7 +93,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 export const getMe = async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.user?.sub);
+        const userId = Number(req.user?.id);
 
         if (!userId) return res.status(400).json({ error: 'Invalid user ID.' });  
 
