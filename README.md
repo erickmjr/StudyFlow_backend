@@ -9,10 +9,16 @@ Exemplo local:
 `http://localhost:3000/api`
 
 **Autenticação**
-Alguns endpoints exigem JWT no header:
-`Authorization: Bearer <token>`
+Esta API usa JWT, mas o token de sessão não é enviado via `Authorization: Bearer ...`.
+Em vez disso, no `login`/`register` a API faz `Set-Cookie` de um cookie chamado `token` com as flags:
+- `HttpOnly` 
+- `SameSite=Lax`
+- `Secure` apenas em produção (`NODE_ENV=production`)
+- `Max-Age` de 2 horas
 
-O token é gerado nos endpoints de login/registro e expira em 2 horas.
+Para consumir no browser, o frontend precisa enviar cookies nas requisições:
+- `fetch(..., { credentials: 'include' })`
+- `axios` com `withCredentials: true`
 
 **Rodar localmente**
 ```bash
@@ -27,7 +33,7 @@ npm run start:dev
 - `email` (string)
 - `type` (string)
 - `createdAt` (string ISO)
-- `password` (string hash, somente em listagem de usuários)
+- `password` (string hash, pode aparecer em endpoints administrativos ou conforme implementação atual)
 
 `Topic`:
 - `id` (number)
@@ -42,7 +48,7 @@ npm run start:dev
 **Endpoints**
 
 **POST /api/user/auth/register**
-Cria usuário e retorna token.
+Cria usuário e autentica a sessão setando o cookie `token` (HttpOnly).
 
 Request JSON:
 ```json
@@ -54,13 +60,13 @@ Request JSON:
 ```
 
 Responses:
-- `201` retorna `{ token, user: { id, name } }`
+- `201` seta cookie `token` e retorna `{ user: { id, name } }`
 - `400` senha menor que 8 caracteres
 - `409` email já usado
 - `500` erro interno
 
 **POST /api/user/auth/login**
-Autentica usuário e retorna token.
+Autentica usuário e seta o cookie `token` (HttpOnly).
 
 Request JSON:
 ```json
@@ -71,12 +77,13 @@ Request JSON:
 ```
 
 Responses:
-- `200` retorna `{ token, user: { sub, email, name } }`
+- `200` seta cookie `token` e retorna `{ user: { sub, email, name } }`
 - `401` credenciais inválidas
 - `500` erro interno
 
 **POST /api/user/forgot-password**
-Envia email com link de redefinição se o usuário existir.
+Inicia o fluxo de recuperação de senha.
+Se o usuário existir, a API envia um e-mail com link de redefinição contendo um token JWT de curta duração.
 
 Request JSON:
 ```json
@@ -86,12 +93,12 @@ Request JSON:
 ```
 
 Responses:
-- `200` sempre retorna `{ message: "If the user exists, an e-mail was sent." }`
+- `200` sempre retorna `{ message: "If the user exists, an e-mail was sent." }` para evitar enumeração de usuários
 - `400` email ausente
 - `500` erro interno
 
 **POST /api/user/reset-password**
-Redefine a senha com token.
+Conclui o fluxo de recuperação de senha, trocando a senha do usuário com base no token recebido por e-mail.
 
 Request JSON:
 ```json
@@ -103,9 +110,33 @@ Request JSON:
 
 Responses:
 - `200` sem corpo (ou corpo vazio)
-- `400` token ou senha ausente, ou token inválido
-- `401` token expirado ou inválido
+- `400` token ausente, senha ausente, senha menor que 8 caracteres, purpose inválido ou subject inválido
+- `401` token expirado ou JWT inválido
 - `404` usuário não encontrado
+- `500` erro interno
+
+Fluxo esperado:
+1. Cliente chama `POST /api/user/forgot-password` com o e-mail.
+2. API envia e-mail com link no formato:
+   `${BACKEND_URL}/reset-password?token=<jwt>`
+3. Cliente extrai o token do link e envia para `POST /api/user/reset-password` junto com `newPassword`.
+4. API valida token, prazo e usuário, e atualiza a senha.
+
+**POST /api/user/edit-username**
+Atualiza o `name` (username) do usuário autenticado.
+Requer cookie `token` (HttpOnly).
+
+Request JSON:
+```json
+{
+  "username": "Novo Nome"
+}
+```
+
+Responses:
+- `200` retorna `{ user }` (usuário atualizado)
+- `400` username ausente ou username com menos de 4 caracteres
+- `401` token ausente ou inválido
 - `500` erro interno
 
 **GET /api/users**
@@ -129,9 +160,7 @@ Observação:
 
 **GET /api/topics**
 Lista tópicos do usuário autenticado.
-
-Headers:
-`Authorization: Bearer <token>`
+Requer cookie `token` (HttpOnly).
 
 Responses:
 - `200` retorna `{ topics, total }`
@@ -140,9 +169,7 @@ Responses:
 
 **GET /api/topics/:id**
 Busca tópico por ID do usuário autenticado.
-
-Headers:
-`Authorization: Bearer <token>`
+Requer cookie `token` (HttpOnly).
 
 Responses:
 - `200` retorna `{ topic }`
@@ -153,9 +180,7 @@ Responses:
 
 **POST /api/topics**
 Cria tópico.
-
-Headers:
-`Authorization: Bearer <token>`
+Requer cookie `token` (HttpOnly).
 
 Request JSON:
 ```json
@@ -174,9 +199,7 @@ Responses:
 
 **PUT /api/topics/:id**
 Atualiza tópico completo.
-
-Headers:
-`Authorization: Bearer <token>`
+Requer cookie `token` (HttpOnly).
 
 Request JSON:
 ```json
@@ -197,9 +220,7 @@ Responses:
 
 **PATCH /api/topics/:id**
 Atualiza campos parciais do tópico.
-
-Headers:
-`Authorization: Bearer <token>`
+Requer cookie `token` (HttpOnly).
 
 Request JSON (qualquer combinação):
 ```json
@@ -218,9 +239,7 @@ Responses:
 
 **DELETE /api/topics/:id**
 Remove tópico.
-
-Headers:
-`Authorization: Bearer <token>`
+Requer cookie `token` (HttpOnly).
 
 Responses:
 - `200` retorna o objeto do service (status/body) conforme implementação atual
@@ -235,22 +254,46 @@ Observação:
 
 Registro:
 ```bash
-curl -X POST http://localhost:3000/api/user/auth/register \
+curl -i -X POST http://localhost:3000/api/user/auth/register \
   -H "Content-Type: application/json" \
+  -c cookies.txt \
   -d '{"email":"user@email.com","password":"12345678","name":"User Name"}'
 ```
 
 Login:
 ```bash
-curl -X POST http://localhost:3000/api/user/auth/login \
+curl -i -X POST http://localhost:3000/api/user/auth/login \
   -H "Content-Type: application/json" \
+  -c cookies.txt \
   -d '{"email":"user@email.com","password":"12345678"}'
+```
+
+Editar username:
+```bash
+curl -X POST http://localhost:3000/api/user/edit-username \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{"username":"Novo Nome"}'
+```
+
+Solicitar recuperação de senha:
+```bash
+curl -X POST http://localhost:3000/api/user/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@email.com"}'
+```
+
+Redefinir senha:
+```bash
+curl -X POST http://localhost:3000/api/user/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{"token":"<jwt-reset-token>","newPassword":"novaSenha123"}'
 ```
 
 Criar tópico:
 ```bash
 curl -X POST http://localhost:3000/api/topics \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
+  -b cookies.txt \
   -d '{"title":"Estudar Node","description":"Revisar Express e Prisma","rawDueDate":"2026-02-20T18:00:00.000Z"}'
 ```
