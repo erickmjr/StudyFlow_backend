@@ -136,7 +136,7 @@ export const forgotPassword = async (email: string) => {
             )
 
             sendResetPasswordMail(email, tokenPassword).catch((error) => {
-                console.error(`Failed to send reset password email: ${error}`);
+                console.error('Failed to send reset password email:', error);
             });
         }
 
