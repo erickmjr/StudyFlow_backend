@@ -78,4 +78,17 @@ export const changeUserPassword = async (userId: number, password: string) => {
     });
 
     return user;
-}
+};
+
+export const editUsername = async (userId: number, newUsername: string) => {
+    const user = await prisma.user.update({
+        where: {
+            id: userId
+        },
+        data: {
+            name: newUsername
+        }
+    });
+
+    return user.name;
+};

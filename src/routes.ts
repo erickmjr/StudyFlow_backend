@@ -8,6 +8,7 @@ router.post('/user/auth/register', UserController.registerUser);
 router.post('/user/auth/login', UserController.loginUser);
 router.post('/user/forgot-password', UserController.forgotPassword);
 router.post('/user/reset-password', UserController.resetPassword);
+router.patch('/user/edit-username', authMiddleware, UserController.editUsername);
 
 router.get('/users', UserController.getAllUsers);
 

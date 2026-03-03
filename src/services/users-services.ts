@@ -45,10 +45,16 @@ export const registerUser = async (email: string, password: string, name: string
             }
         );
 
-        return { status: 201, body: { token, user: {
-            id: created.id,
-            name: created.name
-        } } };
+        return {
+            status: 201,
+            token,
+            body: {
+                user: {
+                    id: created.id,
+                    name: created.name
+                }
+            }
+        };
 
     } catch (error) {
         console.error(error)
@@ -82,8 +88,9 @@ export const loginUser = async (email: string, password: string) => {
         );
 
         return {
-            status: 200, body: {
-                token,
+            status: 200,
+            token,
+            body: {
                 user: {
                     sub: Number(user.id),
                     email: user.email,
@@ -194,6 +201,7 @@ export const resetPassword = async (token: string, password: string) => {
 
 export const getMe = async (userId: number) => {
     try {
+
         const user = await UsersRepository.getUserById(userId);
 
         if (!user) return { status: 404, body: { error: 'User not found.' } };
@@ -204,4 +212,19 @@ export const getMe = async (userId: number) => {
         return { status: 500, body: { error: 'Internal server error.' } };
     }
 
+}
+
+export const editUsername = async (userId: number, userName: string) => {
+
+    if (userName.length < 4) return { status: 400, body: { message: 'Username must have at least 4 characters.' } };
+
+    try {
+
+        const user = await UsersRepository.editUsername(userId, userName);
+
+        return { status: 200, body: { user } };
+
+    } catch {
+        return { status: 500, body: { error: 'Internal server error.' } };
+    }
 }
