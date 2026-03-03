@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = req.cookies?.token;
 
     if (!token) return res.status(401).json({ error: 'Missing token.' });
 
@@ -13,8 +13,14 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 
         const decoded = jwt.verify(token, secret) as JwtPayload;
 
+        const userId = Number(decoded.sub);
+
+        if (!userId || Number.isNaN(userId)) {
+            return res.status(401).json({ error: 'Invalid token subject.' });
+        }
+
         req.user = { 
-            id: Number(decoded.sub)
+            id: userId
         };
         
         next();

@@ -19,7 +19,7 @@ export const sendResetPasswordMail = async (email: string, token: string) => {
         }
     });
 
-    const resetLink = `${process.env.BACKEND_URL}/reset-password?token=${token}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
     html = html.replace('{{resetLink}}', resetLink);
 
     await transporter.sendMail({
