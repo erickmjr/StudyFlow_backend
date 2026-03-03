@@ -8,22 +8,24 @@ const templatePath = path.resolve(
     'resetPassword.html'
 );
 
-let html = fs.readFileSync(templatePath, 'utf-8');
+let templateHtml = fs.readFileSync(templatePath, 'utf-8');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_APP_PASSWORD
+    }
+});
 
 export const sendResetPasswordMail = async (email: string, token: string) => {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_APP_PASSWORD
-        }
-    });
+
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-    html = html.replace('{{resetLink}}', resetLink);
+    const html = templateHtml.replace('{{resetLink}}', resetLink);
 
     await transporter.sendMail({
-        from: `"studyFlow" <no-reply@studyflow.com>`,
+        from: `"studyFlow"`,
         to: email,
         subject: 'Recuperação de senha - StudyFlow',
         html

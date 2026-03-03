@@ -2,6 +2,7 @@ import * as UsersRepository from '../repository/users-repository';
 import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
 import { sendResetPasswordMail } from '../utils/sendResetPasswordMail';
+import { error } from 'console';
 
 export const getAllUsers = async () => {
     try {
@@ -134,7 +135,9 @@ export const forgotPassword = async (email: string) => {
                 }
             )
 
-            await sendResetPasswordMail(email, tokenPassword);
+            sendResetPasswordMail(email, tokenPassword).catch((error) => {
+                console.error(`Failed to send reset password email: ${error}`);
+            });
         }
 
         return { status: 200, body: { message: 'If the user exists, an e-mail was sent.' } };
